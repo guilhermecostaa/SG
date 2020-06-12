@@ -7,6 +7,7 @@ var movingLeft, movingRight, movingDown, movingUp;
 var spawnControl = 0;
 var asteroideVelocity = 0;
 var asteroides = []
+var sphere2;
 
 window.onload = function init() {
 
@@ -57,7 +58,8 @@ window.onload = function init() {
 
 
     createShip();
-    createEarth();
+    //createEarth();
+    createSpace();
     createAsteroide();
     
     animate();
@@ -86,7 +88,7 @@ function createShip() {
     });
 }
 
-function createEarth() {
+/*function createEarth() {
     // create the geometry (shape) of the cylinder: radius top, radius bottom, height, number of segments on the radius, number of segments vertically
     let geometry = new THREE.SphereGeometry(100, 100, 100, 40, 10);
 
@@ -105,7 +107,18 @@ function createEarth() {
 
     console.log("earth created")
     scene.add(sphere);
+}*/
+
+function createSpace() {
+    var geometry = new THREE.SphereGeometry(80, 32, 32);
+    var texture = new THREE.TextureLoader().load("./images/espaço.png")
+    var material = new THREE.MeshBasicMaterial({ map: texture });
+    material.side = THREE.BackSide;
+
+    sphere = new THREE.Mesh(geometry, material);
+    scene.add(sphere);
 }
+
 
 function handleKeyDown(event) {
     var char = String.fromCharCode(event.keyCode);
@@ -160,6 +173,10 @@ function UpdateShip() {
     if (movingLeft == true) {
         movingLeft = true
         ship.position.x -= 0.2
+        if (ship.rotation.z > +0.2)
+            ship.rotation.z += 0.01
+        else
+            ship.rotation.z = +0.2
     }
 
     if (movingRight == true) {
@@ -239,7 +256,7 @@ function getRandom(min, max) {
 }
 
 function animate() {
-    sphere.rotation.x += 0.005;
+    //sphere.rotation.x += 0.005;
     UpdateShip();
     // render
     renderer.render(scene, camera);
