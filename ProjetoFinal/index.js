@@ -59,6 +59,7 @@ window.onload = function init() {
     createShip();
     createEarth();
     createAsteroide();
+    
     animate();
 }
 
@@ -158,60 +159,44 @@ function UpdateShip() {
 
     if (movingLeft == true) {
         movingLeft = true
-        ship.position.x -= 0.1
-        if (ship.rotation.z > -0.2)
-            ship.rotation.z -= 0.01
-        else
-            ship.rotation.z = -0.2
+        ship.position.x -= 0.2
     }
 
     if (movingRight == true) {
-        ship.position.x += 0.1
-        if (ship.rotation.z < 0.2)
-            ship.rotation.z += 0.01
-        else
-            ship.rotation.z = 0.2
+        ship.position.x += 0.2
     }
 
     if (movingUp == true) {
-        ship.position.y += 0.1
-        if (ship.rotation.x < 0.6)
-            ship.rotation.x += 0.03
-        else
-            ship.rotation.x = 0.6
+        ship.position.y += 0.2
     }
 
     if (movingDown == true) {
-        ship.position.y -= 0.1
-        if (ship.rotation.x > -0.6)
-            ship.rotation.x -= 0.03
-        else
-            ship.rotation.x = -0.6
+        ship.position.y -= 0.2
     }
 
     if (moving == false) {
-        if (ship.rotation.z < 0) {
-            ship.rotation.z += 0.01
+        if (ship.position.z < 0) {
+            ship.position.z += 0.01
         }
 
-        if (ship.rotation.z > 0) {
-            ship.rotation.z -= 0.01
+        if (ship.position.z > 0) {
+            ship.position.z -= 0.01
         }
 
-        if (ship.rotation.z == 0) {
-            ship.rotation.z = 0
+        if (ship.position.z == 0) {
+            ship.position.z = 0
         }
 
-        if (ship.rotation.x < 0) {
-            ship.rotation.x += 0.01
+        if (ship.position.x < 0) {
+            ship.position.x += 0.01
         }
 
-        if (ship.rotation.x > 0) {
-            ship.rotation.x -= 0.01
+        if (ship.position.x > 0) {
+            ship.position.x -= 0.01
         }
 
-        if (ship.rotation.x == 0) {
-            ship.rotation.x = 0
+        if (ship.position.x == 0) {
+            ship.position.x = 0
         }
     }
 }
@@ -255,6 +240,7 @@ function getRandom(min, max) {
 
 function animate() {
     sphere.rotation.x += 0.005;
+    UpdateShip();
     // render
     renderer.render(scene, camera);
     requestAnimationFrame(animate);
