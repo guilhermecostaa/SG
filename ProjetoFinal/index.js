@@ -6,6 +6,7 @@ var moving;
 var movingLeft, movingRight, movingDown, movingUp;
 var spawnControl = 0;
 var asteroideVelocity = 0;
+var asteroides = []
 
 window.onload = function init() {
 
@@ -73,6 +74,13 @@ function createShip() {
             ship.scale.set(0.1, 0.1, 0.1);
             ship.rotateY(Math.PI);
             scene.add(ship);
+
+            ship.traverse(function (child) {
+                if (child instanceof THREE.Mesh) {
+                    // apply custom material
+                    child.material.side = THREE.DoubleSide;
+                }
+            });
         });
     });
 }
@@ -211,6 +219,7 @@ function UpdateShip() {
 function createAsteroide() {
     if (spawnControl > 0 && spawnControl < 100) {
         spawnControl++
+
     }
 
     if (spawnControl == 100) {
@@ -229,8 +238,9 @@ function createAsteroide() {
         var rocha = new THREE.Mesh(geometry, material);
         rocha.position.y = 30 - Math.floor((Math.random() * 40) + 1)
         rocha.position.x = 10 - Math.floor((Math.random() * 20) + 1)
-        rocha.position.z =  -50
+        rocha.position.z = -50
         rocha.scale.set(0.3, 0.3, 0.3)
+        asteroides.push(asteroide)
         asteroide.add(rocha)
         scene.add(asteroide);
 
