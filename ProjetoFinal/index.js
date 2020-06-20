@@ -124,15 +124,20 @@ function createShip() {
     });
 }
 
-//ESTE É A FUNCAO RELATIVA À SEGUNDA QUESTÃO
 function createSpace() {
-    var geometry = new THREE.SphereGeometry(180, 64, 64);
-    var texture = new THREE.TextureLoader().load("./images/espaco.png")
-    var material = new THREE.MeshBasicMaterial({ map: texture });
-    material.side = THREE.BackSide;
+    let textureCube = new THREE.CubeTextureLoader()
+        .setPath('images/')
+        .load([
+            'espaco.png',
+            'espaco.png',
+            'espaco.png',
+            'espaco.png',
+            'espaco.png',
+            'espaco.png'
+        ], function () { renderer.render(scene, camera) });
+    scene.background = textureCube;
 
-    sphere = new THREE.Mesh(geometry, material);
-    scene.add(sphere);
+
 }
 
 //create projectiles to be fired
@@ -172,7 +177,7 @@ function createAsteroide() {
     asteroide = new THREE.Object3D();
     let raio = getRandom(3, 20)
     var texture = new THREE.TextureLoader().load("./images/asteroid.png")
-    var geometry = new THREE.SphereGeometry(raio, 22, 22);
+    var geometry = new THREE.SphereGeometry(raio, getRandom(6,10), getRandom(5,7));
     var material = new THREE.MeshPhongMaterial({ map: texture });
     var rocha = new THREE.Mesh(geometry, material);
     //random positioning
@@ -226,20 +231,6 @@ function checkCollision() {
             }
         }
     }
-    /* if (astBoxes.length) {
-        for (let t = 0; t < astBoxes.length; t++) {
-            if (astBoxes[t].intersectsBox(shipBox)) {
-                scene.remove(asteroides[t])
-                asteroides.splice(t, 1)
-                astBoxes.splice(t, 1)
-                lifes -= 1
-                lifesText.innerHTML = "Vidas:" + lifes
-            }
-        }
-    }
- */
-    
-
 }
 
 function handleKeyDown(event) {
@@ -322,11 +313,11 @@ function UpdateShip() {
         ship.position.y -= 0.2
     }
 
-    
-    /*  
-    ESTE É O CODIGO QUE CRIA O 1º ERRO
-    
-    shipBox = new THREE.Box3().setFromObject(hitbox)
+
+
+    //Colision between ship - asteroid
+
+    /* shipBox = new THREE.Box3().setFromObject(hitbox)
 
     //colisions
     for (let i = 0; i < asteroides.length; i++) {
@@ -359,7 +350,7 @@ function updateAsteroide() {
         }
         if (score <= 20) {
             asteroides[i].position.z += getRandom(0.07, 0.1)
-        }else{
+        } else {
             asteroides[i].position.z += getRandom(0.1, 0.2)
         }
 
