@@ -1,6 +1,7 @@
 var controls;
 var renderer, scene, camera;
 var ship = new THREE.Object3D();
+var shipBox;
 var sphere;
 var moving;
 var movingLeft, movingRight, movingDown, movingUp;
@@ -10,9 +11,12 @@ var sphere2;
 var bullet;
 var openFire;
 var bullets = [];
+let bullBoxes = [];
+let astBoxes = [];
 let score = 0;
 let scoreText = "";
-let lives = 3;
+let lifesText = "";
+let lifes = 3;
 
 window.onload = function init() {
 
@@ -71,6 +75,16 @@ window.onload = function init() {
     scoreText.style.left = 50 + 'px';
     document.body.appendChild(scoreText);
 
+    livesText = document.createElement('div');
+    livesText.style.position = 'absolute';
+    livesText.style.width = 100;
+    livesText.style.height = 100;
+    livesText.style.color = "white";
+    livesText.innerHTML = "Vidas: " + lifes;
+    livesText.style.top = 75 + 'px';
+    livesText.style.left = 50 + 'px';
+    document.body.appendChild(livesText);
+
 
     createShip();
     createSpace();
@@ -91,18 +105,9 @@ function createShip() {
             ship.scale.set(1, 1, 1);
             ship.rotateY(Math.PI);
 
-            //box_ship = new THREE.Box3().setFromObject(ship);
-            //shipBox.push(box_ship)
             scene.add(ship);
 
-            ship.traverse(function (child) {
-                if (child instanceof THREE.Mesh) {
-                    // apply custom material
-                    child.material.side = THREE.DoubleSide;
-                }
-            });
-
-
+            shipBox = new THREE.Box3().setFromObject(ship)
 
         });
     });
@@ -150,8 +155,9 @@ function createAsteroide() {
     // create an empty container
     asteroide = new THREE.Object3D();
     let raio = getRandom(3, 20)
+    var texture = new THREE.TextureLoader().load("./images/asteroid.png")
     var geometry = new THREE.SphereGeometry(raio, 22, 22);
-    var material = new THREE.MeshPhongMaterial({ color: 0xd8d0d1 });
+    var material = new THREE.MeshPhongMaterial({ map:texture});
     var rocha = new THREE.Mesh(geometry, material);
     rocha.position.y = 30 - Math.floor((Math.random() * 40) + 1)
     rocha.position.x = 10 - Math.floor((Math.random() * 50) + 1)
@@ -167,9 +173,8 @@ function createAsteroide() {
 
 }
 
-function checkCollision() {
+function createCollisionBox() {
 
-    //let shipBox = new THREE.Box3().setFromObject(ship);
     for (let i = 0; i < asteroides.length; i++) {
         for (let j = 0; j < bullets.length; j++) {
 
@@ -177,40 +182,44 @@ function checkCollision() {
             let bullBox = new THREE.Box3().setFromObject(bullets[j])
             let astBox = new THREE.Box3().setFromObject(asteroides[i]);
 
-            //event
-            let hit = bullBox.intersectsBox(astBox)
+            bullBoxes.push(bullBox)
+            astBoxes.push(astBox)
+        }
+    }
+}
 
-            if (hit) {
-                scene.remove(asteroides[i])
-                asteroides.splice(i, 1)
-                score += 1
-                scoreText.innerHTML = "Pontos:" + score
-                console.log(score)
+function checkCollision() {
+
+    createCollisionBox()
+
+    if (bullBoxes.length) {
+        for (let i = 0; i < bullBoxes.length; i++) {
+            for (let j = 0; j < astBoxes.length; j++) {
+
+                if (bullBoxes[i].intersectsBox(astBoxes[j])) {
+                    scene.remove(asteroides[j])
+                    asteroides.splice(j, 1)
+                    astBoxes.splice(j, 1)
+                    score += 1
+                    scoreText.innerHTML = "Pontos:" + score
+                   
+                }
+            }
+        }
+    }
+    if(astBoxes.length){
+        for (let t = 0; t < astBoxes.length; t++) {
+            if(astBoxes[t].intersectsBox(shipBox)){
+                scene.remove(asteroides[t])
+                asteroides.splice(t,1)
+                astBoxes.splice(t,1)
+                lifes -=1
+                lifesText.innerHTML = "Vidas:" + lifes
             }
         }
 
     }
-    //colisao ship - asteroide
-    /*  if (asteroides.length > 0) {
 
-         for (let i = 0; i < asteroides.length; i++) {
-             var currentPos = asteroides[i];
-             currentPos.position.addVectors(currentPos.position.clone(), currentPos.dir);
-
-             asteroidesBox[i] = new THREE.Box3().setFromObject(currentPos);
-
-             for (let j = 0; j < asteroides.length; j++) {
-                 if (asteroidesBox[i].intersectsBox(shipBox[j])) {
-
-                     scene.remove(asteroides[j])
-                     asteroides.splice(j, 1)
-                     asteroidesBox.splice(j, 1)
-                     score += 1
-
-                 }
-             }
-         }
-     } */
 }
 
 function handleKeyDown(event) {
@@ -322,7 +331,7 @@ function updateBullet() {
 
 function updateAsteroide() {
 
-    if (numbAsteroides <= 3 && score <=20) {
+    if (numbAsteroides <= 3 && score <= 20) {
         createAsteroide();
     }
     //asteroides speed
@@ -338,7 +347,7 @@ function updateAsteroide() {
         }
 
         //update number of asteroides
-         if (asteroides[i].position.z > 200) {
+        if (asteroides[i].position.z > 200) {
 
             scene.remove(asteroides[i])
             asteroides.splice(i, 1)
