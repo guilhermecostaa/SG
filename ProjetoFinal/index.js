@@ -112,14 +112,10 @@ function createShip() {
             ship.scale.set(1, 1, 1);
             ship.rotateY(Math.PI);
 
-            var geometry = new THREE.BoxGeometry(6, 4.5, 6);
-            var material = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0 });
-            hitbox = new THREE.Mesh(geometry, material);
-            hitbox.position.set(0, 0, 40)
-            shipBox = new THREE.Box3().setFromObject(hitbox)
-
-            ship.add(hitbox)
+            shipBox = new THREE.Box3().setFromObject(ship);
+            scene.add(shipBox)
             scene.add(ship);
+
         });
     });
 }
@@ -317,7 +313,8 @@ function UpdateShip() {
 
     //Colision between ship - asteroid
 
-    /* shipBox = new THREE.Box3().setFromObject(hitbox)
+     /*  shipBox = new THREE.Box3().setFromObject(ship)
+    
 
     //colisions
     for (let i = 0; i < asteroides.length; i++) {
@@ -327,7 +324,7 @@ function UpdateShip() {
             astBoxes.splice(i, 1)
             lifes --
         }
-    }   */
+    }     */
 }
 function updateBullet() {
     for (let i = 0; i < bullets.length; i++) {
