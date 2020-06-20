@@ -1,7 +1,8 @@
 var controls;
 var renderer, scene, camera;
 var ship = new THREE.Object3D();
-var shipBox;
+var shipBox
+var hitbox;
 var sphere;
 var moving;
 var movingLeft, movingRight, movingDown, movingUp;
@@ -17,6 +18,7 @@ let score = 0;
 let scoreText = "";
 let lifesText = "";
 let lifes = 3;
+let bbHelper;
 
 window.onload = function init() {
 
@@ -86,6 +88,7 @@ window.onload = function init() {
     document.body.appendChild(livesText);
 
 
+
     createShip();
     createSpace();
     createAsteroide();
@@ -105,10 +108,14 @@ function createShip() {
             ship.scale.set(1, 1, 1);
             ship.rotateY(Math.PI);
 
+            var geometry = new THREE.BoxGeometry(6, 4.5, 6);
+            var material = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0 });
+            hitbox = new THREE.Mesh(geometry, material);
+            hitbox.position.set(0, 0, 40)
+            shipBox = new THREE.Box3().setFromObject(hitbox)
+
+            ship.add(hitbox)
             scene.add(ship);
-
-            shipBox = new THREE.Box3().setFromObject(ship)
-
         });
     });
 }
@@ -157,7 +164,7 @@ function createAsteroide() {
     let raio = getRandom(3, 20)
     var texture = new THREE.TextureLoader().load("./images/asteroid.png")
     var geometry = new THREE.SphereGeometry(raio, 22, 22);
-    var material = new THREE.MeshPhongMaterial({ map:texture});
+    var material = new THREE.MeshPhongMaterial({ map: texture });
     var rocha = new THREE.Mesh(geometry, material);
     rocha.position.y = 30 - Math.floor((Math.random() * 40) + 1)
     rocha.position.x = 10 - Math.floor((Math.random() * 50) + 1)
@@ -202,18 +209,18 @@ function checkCollision() {
                     astBoxes.splice(j, 1)
                     score += 1
                     scoreText.innerHTML = "Pontos:" + score
-                   
+
                 }
             }
         }
     }
-    if(astBoxes.length){
+    if (astBoxes.length) {
         for (let t = 0; t < astBoxes.length; t++) {
-            if(astBoxes[t].intersectsBox(shipBox)){
+            if (astBoxes[t].intersectsBox(shipBox)) {
                 scene.remove(asteroides[t])
-                asteroides.splice(t,1)
-                astBoxes.splice(t,1)
-                lifes -=1
+                asteroides.splice(t, 1)
+                astBoxes.splice(t, 1)
+                lifes -= 1
                 lifesText.innerHTML = "Vidas:" + lifes
             }
         }
@@ -279,10 +286,13 @@ function UpdateShip() {
     if (movingLeft == true) {
         movingLeft = true
         ship.position.x -= 0.2
-        if (ship.position.z > +0.2)
+        if (ship.position.z > +0.2) {
             ship.position.z += 0.01
-        else
+        }
+        else {
             ship.position.z = +0.2
+        }
+
     }
 
     if (movingRight == true) {
@@ -297,31 +307,18 @@ function UpdateShip() {
         ship.position.y -= 0.2
     }
 
-    if (moving == false) {
-        if (ship.position.z < 0) {
-            ship.position.z += 0.01
-        }
+    
+    /* shipBox = new THREE.Box3().setFromObject(hitbox)
 
-        if (ship.position.z > 0) {
-            ship.position.z -= 0.01
+    //colisions
+    for (let i = 0; i < asteroides.length; i++) {
+        if (shipBox.intersectsBox(astBoxes[i])) {
+            scene.remove(asteroides[i])
+            asteroides.splice(i, 1)
+            astBoxes.splice(i, 1)
+            lifes --
         }
-
-        if (ship.position.z == 0) {
-            ship.position.z = 0
-        }
-
-        if (ship.position.x < 0) {
-            ship.position.x += 0.01
-        }
-
-        if (ship.position.x > 0) {
-            ship.position.x -= 0.01
-        }
-
-        if (ship.position.x == 0) {
-            ship.position.x = 0
-        }
-    }
+    } */
 }
 function updateBullet() {
     for (let i = 0; i < bullets.length; i++) {
@@ -331,7 +328,7 @@ function updateBullet() {
 
 function updateAsteroide() {
 
-    if (numbAsteroides <= 3 && score <= 20) {
+    if (numbAsteroides <= 3) {
         createAsteroide();
     }
     //asteroides speed
@@ -344,6 +341,8 @@ function updateAsteroide() {
         }
         if (score <= 20) {
             asteroides[i].position.z += getRandom(0.07, 0.1)
+        }else{
+            asteroides[i].position.z += getRandom(0.1, 0.2)
         }
 
         //update number of asteroides
@@ -370,5 +369,6 @@ function animate() {
     UpdateShip();
     // render
     renderer.render(scene, camera);
+
     requestAnimationFrame(animate);
 }
