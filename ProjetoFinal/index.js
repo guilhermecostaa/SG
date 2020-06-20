@@ -53,7 +53,7 @@ window.onload = function init() {
     document.onkeydown = handleKeyDown;
     document.onkeyup = handleKeyUp;
 
-    var hemisphereLight = new THREE.HemisphereLight(0xaaaaaa, 0x000000, 0.9);
+    var hemisphereLight = new THREE.HemisphereLight(0xaaaaaa, 0xffffff, 0.9);
     scene.add(hemisphereLight);
 
     // directionallight
@@ -67,6 +67,8 @@ window.onload = function init() {
     directionalLight.castShadow = true;
     scene.add(directionalLight);
 
+
+    // text - points
     scoreText = document.createElement('div');
     scoreText.style.position = 'absolute';
     scoreText.style.width = 100;
@@ -77,6 +79,7 @@ window.onload = function init() {
     scoreText.style.left = 50 + 'px';
     document.body.appendChild(scoreText);
 
+    //text - lives
     livesText = document.createElement('div');
     livesText.style.position = 'absolute';
     livesText.style.width = 100;
@@ -95,6 +98,7 @@ window.onload = function init() {
     animate();
 }
 
+// create and place the ship
 function createShip() {
     // LOAD THE MESH
     const mtlLoader = new THREE.MTLLoader();
@@ -120,6 +124,7 @@ function createShip() {
     });
 }
 
+//ESTE É A FUNCAO RELATIVA À SEGUNDA QUESTÃO
 function createSpace() {
     var geometry = new THREE.SphereGeometry(180, 64, 64);
     var texture = new THREE.TextureLoader().load("./images/espaco.png")
@@ -130,6 +135,7 @@ function createSpace() {
     scene.add(sphere);
 }
 
+//create projectiles to be fired
 function createBullet() {
     if (openFire) {
         var geometry = new THREE.BoxGeometry(0.5, 0.5);
@@ -147,6 +153,8 @@ function createBullet() {
         bullet.pos = bullet.pos.clone().applyMatrix4(ship.matrixWorld);
 
     }
+
+    //removes bullets
     for (let i = 0; i < bullets.length; i++) {
         if (bullets[i].position.z < -100) {
 
@@ -155,6 +163,7 @@ function createBullet() {
         }
     }
 }
+
 
 function createAsteroide() {
 
@@ -166,6 +175,7 @@ function createAsteroide() {
     var geometry = new THREE.SphereGeometry(raio, 22, 22);
     var material = new THREE.MeshPhongMaterial({ map: texture });
     var rocha = new THREE.Mesh(geometry, material);
+    //random positioning
     rocha.position.y = 30 - Math.floor((Math.random() * 40) + 1)
     rocha.position.x = 10 - Math.floor((Math.random() * 50) + 1)
     rocha.position.z = getRandom(-80, -150)
@@ -182,6 +192,7 @@ function createAsteroide() {
 
 function createCollisionBox() {
 
+    //colision box for the bullets and asteroids
     for (let i = 0; i < asteroides.length; i++) {
         for (let j = 0; j < bullets.length; j++) {
 
@@ -199,6 +210,7 @@ function checkCollision() {
 
     createCollisionBox()
 
+    //colision between bullets and asteroids
     if (bullBoxes.length) {
         for (let i = 0; i < bullBoxes.length; i++) {
             for (let j = 0; j < astBoxes.length; j++) {
@@ -214,7 +226,7 @@ function checkCollision() {
             }
         }
     }
-    if (astBoxes.length) {
+    /* if (astBoxes.length) {
         for (let t = 0; t < astBoxes.length; t++) {
             if (astBoxes[t].intersectsBox(shipBox)) {
                 scene.remove(asteroides[t])
@@ -224,13 +236,15 @@ function checkCollision() {
                 lifesText.innerHTML = "Vidas:" + lifes
             }
         }
-
     }
+ */
+    
 
 }
 
 function handleKeyDown(event) {
     var char = String.fromCharCode(event.keyCode);
+    //moviment
     switch (char) {
         case "A":
             moving = true
@@ -248,6 +262,7 @@ function handleKeyDown(event) {
             movingDown = true
             moving = true
             break;
+        //firing bullets
         case "K":
             openFire = true
         default:
@@ -308,7 +323,10 @@ function UpdateShip() {
     }
 
     
-    /* shipBox = new THREE.Box3().setFromObject(hitbox)
+    /*  
+    ESTE É O CODIGO QUE CRIA O 1º ERRO
+    
+    shipBox = new THREE.Box3().setFromObject(hitbox)
 
     //colisions
     for (let i = 0; i < asteroides.length; i++) {
@@ -318,7 +336,7 @@ function UpdateShip() {
             astBoxes.splice(i, 1)
             lifes --
         }
-    } */
+    }   */
 }
 function updateBullet() {
     for (let i = 0; i < bullets.length; i++) {
