@@ -1,13 +1,18 @@
 var controls;
 var renderer, scene, camera;
-var ship;
+var ship = new THREE.Object3D();
 var sphere;
 var moving;
 var movingLeft, movingRight, movingDown, movingUp;
-var spawnControl = 0;
-var asteroideVelocity = 0;
-var asteroides = []
+var asteroides = [];
+var numbAsteroides = 0;
 var sphere2;
+var bullet;
+var openFire;
+var bullets = [];
+let score = 0;
+let scoreText = "";
+let lives = 3;
 
 window.onload = function init() {
 
@@ -20,8 +25,8 @@ window.onload = function init() {
     // create a camera, which defines where we're looking at
     var aspect = window.innerWidth / window.innerHeight;
     camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 100);
-    camera.position.z = 50;
-    camera.position.y = 15;
+    camera.position.z = 70;
+    camera.position.y = 10;
 
     controls = new THREE.OrbitControls(camera);
     controls.addEventListener('change', function () { renderer.render(scene, camera); });
@@ -56,26 +61,38 @@ window.onload = function init() {
     directionalLight.castShadow = true;
     scene.add(directionalLight);
 
+    scoreText = document.createElement('div');
+    scoreText.style.position = 'absolute';
+    scoreText.style.width = 100;
+    scoreText.style.height = 100;
+    scoreText.style.color = "white";
+    scoreText.innerHTML = "Pontos: " + score;
+    scoreText.style.top = 50 + 'px';
+    scoreText.style.left = 50 + 'px';
+    document.body.appendChild(scoreText);
+
 
     createShip();
-    //createEarth();
     createSpace();
     createAsteroide();
-    
     animate();
 }
 
 function createShip() {
     // LOAD THE MESH
-    let mtlLoader = new THREE.MTLLoader();
-    mtlLoader.load('./models/3d-model.mtl', function (materials) {
+    const mtlLoader = new THREE.MTLLoader();
+    mtlLoader.load('./models/fast-ship.mtl', function (materials) {
         materials.preload();
-        let loader = new THREE.OBJLoader();
+        var loader = new THREE.OBJLoader();
         loader.setMaterials(materials);
-        loader.load('./models/3d-model.obj', function (object) {
+        loader.load('./models/fast-ship.obj', function (object) {
             ship = object;
-            ship.scale.set(0.1, 0.1, 0.1);
+            ship.position.z = 40
+            ship.scale.set(1, 1, 1);
             ship.rotateY(Math.PI);
+
+            //box_ship = new THREE.Box3().setFromObject(ship);
+            //shipBox.push(box_ship)
             scene.add(ship);
 
             ship.traverse(function (child) {
@@ -84,34 +101,16 @@ function createShip() {
                     child.material.side = THREE.DoubleSide;
                 }
             });
+
+
+
         });
     });
 }
 
-/*function createEarth() {
-    // create the geometry (shape) of the cylinder: radius top, radius bottom, height, number of segments on the radius, number of segments vertically
-    let geometry = new THREE.SphereGeometry(100, 100, 100, 40, 10);
-
-    map = new THREE.TextureLoader().load('images/no_clouds_4k.jpg');
-    bumpmap = new THREE.TextureLoader().load('images/elev_bump_4k.jpg');
-    material = new THREE.MeshPhongMaterial({
-        map: map,
-        bumpMap: bumpmap,
-        bumpScale: 0.05
-    });
-    // And put the geometry and material together into a mesh
-    sphere = new THREE.Mesh(geometry, material);
-    sphere.position.y = -80
-    sphere.scale.set(0.8, 0.8, 0.8)
-    sphere.receiveShadow = true;
-
-    console.log("earth created")
-    scene.add(sphere);
-}*/
-
 function createSpace() {
-    var geometry = new THREE.SphereGeometry(80, 32, 32);
-    var texture = new THREE.TextureLoader().load("./images/espaço.png")
+    var geometry = new THREE.SphereGeometry(180, 64, 64);
+    var texture = new THREE.TextureLoader().load("./images/espaco.png")
     var material = new THREE.MeshBasicMaterial({ map: texture });
     material.side = THREE.BackSide;
 
@@ -119,6 +118,100 @@ function createSpace() {
     scene.add(sphere);
 }
 
+function createBullet() {
+    if (openFire) {
+        var geometry = new THREE.BoxGeometry(0.5, 0.5);
+        var material = new THREE.MeshBasicMaterial();
+        bullet = new THREE.Mesh(geometry, material);
+
+        bullet.position.z = ship.position.z
+        bullet.position.x = ship.position.x
+        bullet.position.y = ship.position.y
+
+        bullets.push(bullet)
+
+        scene.add(bullet)
+        bullet.pos = ship.position.clone()
+        bullet.pos = bullet.pos.clone().applyMatrix4(ship.matrixWorld);
+
+    }
+    for (let i = 0; i < bullets.length; i++) {
+        if (bullets[i].position.z < -100) {
+
+            scene.remove(bullets[i])
+            bullets.splice(i, 1)
+        }
+    }
+}
+
+function createAsteroide() {
+
+
+    // create an empty container
+    asteroide = new THREE.Object3D();
+    let raio = getRandom(3, 20)
+    var geometry = new THREE.SphereGeometry(raio, 22, 22);
+    var material = new THREE.MeshPhongMaterial({ color: 0xd8d0d1 });
+    var rocha = new THREE.Mesh(geometry, material);
+    rocha.position.y = 30 - Math.floor((Math.random() * 40) + 1)
+    rocha.position.x = 10 - Math.floor((Math.random() * 50) + 1)
+    rocha.position.z = getRandom(-80, -150)
+    rocha.scale.set(0.3, 0.3, 0.3)
+
+    asteroides.push(asteroide)
+    asteroide.add(rocha)
+    scene.add(asteroide);
+
+    numbAsteroides++;
+
+
+}
+
+function checkCollision() {
+
+    //let shipBox = new THREE.Box3().setFromObject(ship);
+    for (let i = 0; i < asteroides.length; i++) {
+        for (let j = 0; j < bullets.length; j++) {
+
+            //hitbox
+            let bullBox = new THREE.Box3().setFromObject(bullets[j])
+            let astBox = new THREE.Box3().setFromObject(asteroides[i]);
+
+            //event
+            let hit = bullBox.intersectsBox(astBox)
+
+            if (hit) {
+                scene.remove(asteroides[i])
+                asteroides.splice(i, 1)
+                score += 1
+                scoreText.innerHTML = "Pontos:" + score
+                console.log(score)
+            }
+        }
+
+    }
+    //colisao ship - asteroide
+    /*  if (asteroides.length > 0) {
+
+         for (let i = 0; i < asteroides.length; i++) {
+             var currentPos = asteroides[i];
+             currentPos.position.addVectors(currentPos.position.clone(), currentPos.dir);
+
+             asteroidesBox[i] = new THREE.Box3().setFromObject(currentPos);
+
+             for (let j = 0; j < asteroides.length; j++) {
+                 if (asteroidesBox[i].intersectsBox(shipBox[j])) {
+
+                     scene.remove(asteroides[j])
+                     asteroides.splice(j, 1)
+                     asteroidesBox.splice(j, 1)
+                     score += 1
+
+                 }
+             }
+         }
+     } */
+}
 
 function handleKeyDown(event) {
     var char = String.fromCharCode(event.keyCode);
@@ -139,6 +232,8 @@ function handleKeyDown(event) {
             movingDown = true
             moving = true
             break;
+        case "K":
+            openFire = true
         default:
             break;
     }
@@ -163,6 +258,8 @@ function handleKeyUp(event) {
             movingDown = false
             moving = false
             break;
+        case "K":
+            openFire = false
         default:
             break;
     }
@@ -173,10 +270,10 @@ function UpdateShip() {
     if (movingLeft == true) {
         movingLeft = true
         ship.position.x -= 0.2
-        if (ship.rotation.z > +0.2)
-            ship.rotation.z += 0.01
+        if (ship.position.z > +0.2)
+            ship.position.z += 0.01
         else
-            ship.rotation.z = +0.2
+            ship.position.z = +0.2
     }
 
     if (movingRight == true) {
@@ -217,36 +314,36 @@ function UpdateShip() {
         }
     }
 }
-
-function createAsteroide() {
-    if (spawnControl > 0 && spawnControl < 100) {
-        spawnControl++
-
+function updateBullet() {
+    for (let i = 0; i < bullets.length; i++) {
+        bullets[i].position.z += -5
     }
+}
 
-    if (spawnControl == 100) {
-        spawnControl = 0
+function updateAsteroide() {
 
-        if (asteroideVelocity < 0.7)
-            asteroideVelocity += 0.01
+    if (numbAsteroides <= 3 && score <=20) {
+        createAsteroide();
     }
+    //asteroides speed
+    for (let i = 0; i < asteroides.length; i++) {
+        if (score <= 5) {
+            asteroides[i].position.z += getRandom(0.01, 0.03)
+        }
+        if (score <= 10) {
+            asteroides[i].position.z += getRandom(0.04, 0.06)
+        }
+        if (score <= 20) {
+            asteroides[i].position.z += getRandom(0.07, 0.1)
+        }
 
-    if (spawnControl == 0) {
-        // create an empty container
-        asteroide = new THREE.Object3D();
-        let raio = getRandom(10, 20)
-        var geometry = new THREE.SphereGeometry(raio, 32, 32);
-        var material = new THREE.MeshPhongMaterial({ color: 0xd8d0d1 });
-        var rocha = new THREE.Mesh(geometry, material);
-        rocha.position.y = 30 - Math.floor((Math.random() * 40) + 1)
-        rocha.position.x = 10 - Math.floor((Math.random() * 20) + 1)
-        rocha.position.z = -50
-        rocha.scale.set(0.3, 0.3, 0.3)
-        asteroides.push(asteroide)
-        asteroide.add(rocha)
-        scene.add(asteroide);
+        //update number of asteroides
+         if (asteroides[i].position.z > 200) {
 
-        spawnControl = 1;
+            scene.remove(asteroides[i])
+            asteroides.splice(i, 1)
+            numbAsteroides--
+        }
     }
 
 }
@@ -256,7 +353,11 @@ function getRandom(min, max) {
 }
 
 function animate() {
-    //sphere.rotation.x += 0.005;
+
+    createBullet();
+    updateBullet();
+    updateAsteroide();
+    checkCollision();
     UpdateShip();
     // render
     renderer.render(scene, camera);
